@@ -1,0 +1,9 @@
+server:
+    port: 8090
+
+spring:
+    application:
+        name: openai-api
+
+openai:
+    apiHostPrefix: "http://localhost:8001/proxy?path="
