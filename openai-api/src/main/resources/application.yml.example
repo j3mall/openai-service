@@ -1,9 +1,16 @@
 server:
-    port: 8090
+    port: 8001
 
 spring:
     application:
         name: openai-api
 
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://nacos:3307/openai_service_dev?characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=UTC
+        username: mysql
+        password: mysql
+
 openai:
+    maxLogRespSize: 10000
     apiHostPrefix: "http://localhost:8001/proxy?path="

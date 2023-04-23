@@ -56,6 +56,7 @@ public class OkHttpUtil {
             }
         } catch (Exception e) {
             log.error("okhttp GET请求异常, {}", ExceptionUtils.getStackTrace(e));
+            throw new OpenAiException(e.getCause().toString());
         } finally {
             if (response != null) {
                 response.close();
@@ -79,7 +80,7 @@ public class OkHttpUtil {
             }
         } catch (IOException e) {
             log.error("okhttp post异常, {}, {}", url, ExceptionUtils.getStackTrace(e));
-            throw new RuntimeException(e.getCause().toString());
+            throw new OpenAiException(e.getCause().toString());
         }
         return responseBody;
     }
@@ -111,7 +112,7 @@ public class OkHttpUtil {
             log.error("post postForm返回失败, {}, {}", url, response.body().string());
         } catch (Exception e) {
             log.error("okhttp postForm异常, {}, {}", url, ExceptionUtils.getStackTrace(e));
-            throw new RuntimeException(e.getCause().toString());
+            throw new OpenAiException(e.getCause().toString());
         } finally {
             if (response != null) {
                 response.close();
