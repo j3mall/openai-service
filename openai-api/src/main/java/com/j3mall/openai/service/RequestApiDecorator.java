@@ -10,7 +10,6 @@ import com.j3mall.openai.utils.OpenAiException;
 import java.util.Optional;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -40,10 +39,10 @@ public class RequestApiDecorator {
         String apiResp = null;
         try {
             if ("GET".equals(reqMethod)) {
-                apiResp = okHttpUtil.get(openAiHost + reqPath, null);
+                apiResp = okHttpUtil.getRequest(openAiHost + "general/" + reqPath, null);
                 log.info("proxy{} [{}] {}秒返回字符{}个", reqMethod, reqPath, watch.getTime()/1000.0, apiResp.length());
             } else {
-                apiResp = okHttpUtil.post(openAiHost + reqPath, reqBody);
+                apiResp = okHttpUtil.post(openAiHost + "general/" + reqPath, reqBody);
                 log.info("proxyPost [{}] {}秒返回字符{}个【{}】", reqPath, watch.getTime()/1000.0, apiResp.length(), apiResp);
             }
             // 更新请求记录表的数据

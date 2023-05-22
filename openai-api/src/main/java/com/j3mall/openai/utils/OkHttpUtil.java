@@ -2,10 +2,12 @@ package com.j3mall.openai.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -30,26 +32,22 @@ public class OkHttpUtil {
      * @param queries 请求的参数，在浏览器？后面的数据，没有可以传null
      * @return
      */
-    public String get(String url, Map<String, String> queries) {
-        String responseBody = "";
-        StringBuffer sb = new StringBuffer(url);
+    public String getRequest(String url, Map<String, String> queries) {
+        String responseBody = "{}";
+        StringBuilder sb = new StringBuilder(url);
         if (queries != null && !queries.keySet().isEmpty()) {
             boolean firstFlag = true;
-            Iterator iterator = queries.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry entry = (Map.Entry<String, String>) iterator.next();
+            for (Entry<String, String> entry : queries.entrySet()) {
                 if (firstFlag) {
-                    sb.append("?" + entry.getKey() + "=" + entry.getValue());
+                    sb.append(String.format("?%s=%s", entry.getKey(), entry.getValue()));
                     firstFlag = false;
                 } else {
-                    sb.append("&" + entry.getKey() + "=" + entry.getValue());
+                    sb.append(String.format("&%s=%s", entry.getKey(), entry.getValue()));
                 }
             }
         }
         Request request = new Request.Builder().url(sb.toString()).build();
-        Response response = null;
-        try {
-            response = okHttpClient.newCall(request).execute();
+        try (Response response = okHttpClient.newCall(request).execute()) {
             int status = response.code();
             if (status == 200) {
                 return response.body().string();
@@ -57,10 +55,6 @@ public class OkHttpUtil {
         } catch (Exception e) {
             log.error("okhttp GET请求异常, {}", ExceptionUtils.getStackTrace(e));
             throw new OpenAiException(e.getCause().toString());
-        } finally {
-            if (response != null) {
-                response.close();
-            }
         }
         return responseBody;
     }
@@ -83,6 +77,28 @@ public class OkHttpUtil {
             throw new OpenAiException(e.getCause().toString());
         }
         return responseBody;
+    }
+
+    /**
+     * POST请求返回流式数据
+     */
+    public String postStream(String url, String jsonStr) {
+        final String[] responseBody = {""};
+        RequestBody body = RequestBody.create(JsonType, jsonStr);
+        Request request = new Request.Builder().url(url).post(body).build();
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                log.error("异步请求异常, ", e);
+                throw new OpenAiException(e.getCause().toString());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                responseBody[0] = response.body().string();
+            }
+        });
+        return responseBody[0];
     }
 
     /**
